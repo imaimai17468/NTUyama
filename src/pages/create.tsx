@@ -4,11 +4,17 @@ import { BsFillMicFill, BsFillMicMuteFill } from "react-icons/bs";
 import { useState, useEffect } from "react";
 import { AudioVisualizer } from "@/components/common";
 
+type EditableText = {
+  index: number;
+  isEditing: boolean;
+};
+
 export default function Home() {
   const [isRecording, setIsRecording] = useState(false);
   const [text, setText] = useState<string>("");
   const [allText, setAllText] = useState<string[]>([]);
   const [transcript, setTranscript] = useState<string>("");
+  const [editableText, setEditableText] = useState<EditableText[]>([]);
 
   const recognition = new webkitSpeechRecognition();
   recognition.lang = "ja-JP";
@@ -29,7 +35,12 @@ export default function Home() {
     const results = event.results;
     for (let i = event.resultIndex; i < results.length; i++) {
       if (results[i].isFinal) {
-        setText((prevText) => prevText + results[i][0].transcript);
+        setText((prevText) =>
+          (
+            (prevText ? prevText + " " : prevText) +
+            results[i][0].transcript.replaceAll(" ", "、").replace("、", "")
+          ).replaceAll("  ", " ")
+        );
         setTranscript("");
       } else {
         setTranscript(results[i][0].transcript);
@@ -76,8 +87,16 @@ export default function Home() {
                   {isRecording && <AudioVisualizer />}
                 </div>
               </div>
-              {text}
-              {transcript}
+              {text &&
+                `${text}`.split(" ").map((word, index) => (
+                  <div className="flex gap-4 break-all" key={index}>
+                    <span className="text-neutral-focus mr-4">$</span>
+                    <p>{word}</p>
+                  </div>
+                ))}
+              <pre data-prefix="$">
+                <code>{transcript}</code>
+              </pre>
             </div>
           </div>
           <div className="w-1/2 preview border border-base-200 rounded-xl p-3 overflow-y-scroll gap-4 flex flex-col">
@@ -86,11 +105,50 @@ export default function Home() {
                 key={index}
                 className="border border-white rounded-lg flex p-2 gap-2"
               >
-                <p className="flex-1">{text}</p>
-                <button className="btn btn-primary btn-outline btn-circle btn-xs">
+                {editableText.find((e) => e.index === index)?.isEditing ? (
+                  <textarea
+                    className="textarea textarea-bordered flex-1"
+                    value={text.split(" ").join("\n")}
+                    rows={text.split(" ").length}
+                    onChange={(e) =>
+                      setAllText(
+                        allText.map((t, i) =>
+                          i === index ? e.target.value : t
+                        )
+                      )
+                    }
+                  />
+                ) : (
+                  <div className="flex-1">
+                    {text.split(" ").map((t) => (
+                      <p key={t}>{t}</p>
+                    ))}
+                  </div>
+                )}
+                <button
+                  className="btn btn-primary btn-outline btn-circle btn-xs"
+                  // すでにあれば削除
+                  onClick={() => {
+                    if (editableText.find((e) => e.index === index)) {
+                      setEditableText(
+                        editableText.filter((e) => e.index !== index)
+                      );
+                    } else {
+                      setEditableText([
+                        ...editableText,
+                        { index, isEditing: true },
+                      ]);
+                    }
+                  }}
+                >
                   <AiFillEdit />
                 </button>
-                <button className="btn btn-warning btn-outline btn-circle btn-xs">
+                <button
+                  className="btn btn-warning btn-outline btn-circle btn-xs"
+                  onClick={() =>
+                    setAllText(allText.filter((_, i) => i !== index))
+                  }
+                >
                   <AiFillDelete />
                 </button>
               </div>
