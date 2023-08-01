@@ -88,73 +88,75 @@ export default function Home() {
                 </div>
               </div>
               <div className="overflow-y-scroll w-full">
+                <div className="mb-2 ml-4">
+                  <p className="text-gray-300">解析 : {transcript}</p>
+                </div>
                 {text &&
                   `${text}`.split(" ").map((word, index) => (
                     <div className="flex gap-4 break-all" key={index}>
                       <span className="text-neutral-focus mr-4">$</span>
                       <p>{word}</p>
                     </div>
-                  ))}
-                <pre data-prefix="$">
-                  <code>{transcript}</code>
-                </pre>
+                  )).reverse()}
               </div>
             </div>
           </div>
           <div className="w-1/2 preview border border-base-200 rounded-xl p-3 overflow-y-scroll gap-4 flex flex-col">
-            {allText.map((text, index) => (
-              <div
-                key={index}
-                className="border border-white rounded-lg flex p-2 gap-2"
-              >
-                {editableText.find((e) => e.index === index)?.isEditing ? (
-                  <textarea
-                    className="textarea textarea-bordered flex-1"
-                    value={text.split(" ").join("\n")}
-                    rows={text.split(" ").length}
-                    onChange={(e) =>
-                      setAllText(
-                        allText.map((t, i) =>
-                          i === index ? e.target.value : t
+            {allText
+              .map((text, index) => (
+                <div
+                  key={index}
+                  className="border border-white rounded-lg flex p-2 gap-2"
+                >
+                  {editableText.find((e) => e.index === index)?.isEditing ? (
+                    <textarea
+                      className="textarea textarea-bordered flex-1"
+                      value={text.split(" ").join("\n")}
+                      rows={text.split(" ").length}
+                      onChange={(e) =>
+                        setAllText(
+                          allText.map((t, i) =>
+                            i === index ? e.target.value : t
+                          )
                         )
-                      )
+                      }
+                    />
+                  ) : (
+                    <div className="flex-1">
+                      {text.split(" ").map((t) => (
+                        <p key={t}>{t}</p>
+                      ))}
+                    </div>
+                  )}
+                  <button
+                    className="btn btn-primary btn-outline btn-circle btn-xs"
+                    // すでにあれば削除
+                    onClick={() => {
+                      if (editableText.find((e) => e.index === index)) {
+                        setEditableText(
+                          editableText.filter((e) => e.index !== index)
+                        );
+                      } else {
+                        setEditableText([
+                          ...editableText,
+                          { index, isEditing: true },
+                        ]);
+                      }
+                    }}
+                  >
+                    <AiFillEdit />
+                  </button>
+                  <button
+                    className="btn btn-warning btn-outline btn-circle btn-xs"
+                    onClick={() =>
+                      setAllText(allText.filter((_, i) => i !== index))
                     }
-                  />
-                ) : (
-                  <div className="flex-1">
-                    {text.split(" ").map((t) => (
-                      <p key={t}>{t}</p>
-                    ))}
-                  </div>
-                )}
-                <button
-                  className="btn btn-primary btn-outline btn-circle btn-xs"
-                  // すでにあれば削除
-                  onClick={() => {
-                    if (editableText.find((e) => e.index === index)) {
-                      setEditableText(
-                        editableText.filter((e) => e.index !== index)
-                      );
-                    } else {
-                      setEditableText([
-                        ...editableText,
-                        { index, isEditing: true },
-                      ]);
-                    }
-                  }}
-                >
-                  <AiFillEdit />
-                </button>
-                <button
-                  className="btn btn-warning btn-outline btn-circle btn-xs"
-                  onClick={() =>
-                    setAllText(allText.filter((_, i) => i !== index))
-                  }
-                >
-                  <AiFillDelete />
-                </button>
-              </div>
-            ))}
+                  >
+                    <AiFillDelete />
+                  </button>
+                </div>
+              ))
+              .reverse()}
           </div>
         </div>
       </div>
