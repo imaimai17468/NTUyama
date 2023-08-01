@@ -61,9 +61,9 @@ export default function Home() {
           <div className="w-3 h-3 rounded-full bg-white bg-opacity-50" />
           <div className="w-3 h-3 rounded-full bg-white bg-opacity-50" />
         </div>
-        <div className="p-3 flex justify-center gap-3 h-full">
+        <div className="p-3 flex justify-center gap-3 h-[92.5%]">
           <div className="mockup-code w-1/2">
-            <div className="px-8 flex flex-col gap-4 items-start">
+            <div className="px-8 flex flex-col gap-4 items-start h-[90%]">
               <div className="flex items-center gap-4 w-full">
                 <label className="swap">
                   <input
@@ -87,16 +87,18 @@ export default function Home() {
                   {isRecording && <AudioVisualizer />}
                 </div>
               </div>
-              {text &&
-                `${text}`.split(" ").map((word, index) => (
-                  <div className="flex gap-4 break-all" key={index}>
-                    <span className="text-neutral-focus mr-4">$</span>
-                    <p>{word}</p>
-                  </div>
-                ))}
-              <pre data-prefix="$">
-                <code>{transcript}</code>
-              </pre>
+              <div className="overflow-y-scroll w-full">
+                {text &&
+                  `${text}`.split(" ").map((word, index) => (
+                    <div className="flex gap-4 break-all" key={index}>
+                      <span className="text-neutral-focus mr-4">$</span>
+                      <p>{word}</p>
+                    </div>
+                  ))}
+                <pre data-prefix="$">
+                  <code>{transcript}</code>
+                </pre>
+              </div>
             </div>
           </div>
           <div className="w-1/2 preview border border-base-200 rounded-xl p-3 overflow-y-scroll gap-4 flex flex-col">
