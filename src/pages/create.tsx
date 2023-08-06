@@ -1,5 +1,10 @@
 import Wave from "react-wavify";
-import { AiFillEdit, AiFillDelete } from "react-icons/ai";
+import {
+  AiFillEdit,
+  AiFillDelete,
+  AiOutlineClose,
+  AiOutlineCopy,
+} from "react-icons/ai";
 import { BsFillMicFill, BsFillMicMuteFill } from "react-icons/bs";
 import { useState, useEffect } from "react";
 import { AudioVisualizer } from "@/components/common";
@@ -15,6 +20,7 @@ export default function Home() {
   const [allText, setAllText] = useState<string[]>([]);
   const [transcript, setTranscript] = useState<string>("");
   const [editableText, setEditableText] = useState<EditableText[]>([]);
+  const [result, setResult] = useState<string>("");
 
   const recognition = new webkitSpeechRecognition();
   recognition.lang = "ja-JP";
@@ -52,19 +58,35 @@ export default function Home() {
     <main className="w-screen h-screen flex items-center justify-center font-sawarabi flex-col gap-8">
       <input type="checkbox" id="result" className="modal-toggle" />
       <div className="modal">
-        <div className="modal-box flex flex-col gap-4">
+        <div className="modal-box max-w-5xl flex flex-col gap-4">
+          <div className="absolute -top-2 right-5 modal-action">
+            <label htmlFor="result" className="btn btn-circle btn-sm">
+              <AiOutlineClose />
+            </label>
+          </div>
           <h2 className="font-bold text-2xl">変換結果</h2>
-          <div className="preview border border-base-200 rounded-lg p-2">
+          <div className="preview border border-base-200 rounded-lg p-2 flex flex-col gap-2">
+            <button
+              className="btn btn-circle btn-sm ml-auto"
+              onClick={() => {
+                navigator.clipboard.writeText(result);
+              }}
+            >
+              <AiOutlineCopy />
+            </button>
             <div className="mockup-code">
               <div className="px-8">
-                <p>変換中...</p>
+                {result.split("\n").map((line, i) => (
+                  <div key={i} className="flex gap-2">
+                    {line.split(" ").map((word, j) => (
+                      <span key={j} className="inline-block">
+                        {word}
+                      </span>
+                    ))}
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
-          <div className="modal-action">
-            <label htmlFor="result" className="btn">
-              閉じる
-            </label>
           </div>
         </div>
       </div>
@@ -151,7 +173,6 @@ export default function Home() {
                   )}
                   <button
                     className="btn btn-primary btn-outline btn-circle btn-xs"
-                    // すでにあれば削除
                     onClick={() => {
                       if (editableText.find((e) => e.index === index)) {
                         setEditableText(
