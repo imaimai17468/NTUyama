@@ -50,19 +50,37 @@ export default function Home() {
 
   return (
     <main className="w-screen h-screen flex items-center justify-center font-sawarabi flex-col gap-8">
+      <input type="checkbox" id="result" className="modal-toggle" />
+      <div className="modal">
+        <div className="modal-box flex flex-col gap-4">
+          <h2 className="font-bold text-2xl">変換結果</h2>
+          <div className="preview border border-base-200 rounded-lg p-2">
+            <div className="mockup-code">
+              <div className="px-8">
+                <p>変換中...</p>
+              </div>
+            </div>
+          </div>
+          <div className="modal-action">
+            <label htmlFor="result" className="btn">
+              閉じる
+            </label>
+          </div>
+        </div>
+      </div>
       <ul className="steps">
         <li className="step step-primary">よもやまを記録</li>
         <li className="step">markdownに変換</li>
         <li className="step">ドキュメントに貼り付ける</li>
       </ul>
-      <div className="w-3/4 h-2/3 border border-white rounded-xl flex flex-col">
+      <div className="w-3/4 h-2/3 border border-white rounded-xl flex flex-col z-10 bg-base-100">
         <div className="border-b border-white p-3 flex gap-3">
           <div className="w-3 h-3 rounded-full bg-white bg-opacity-50" />
           <div className="w-3 h-3 rounded-full bg-white bg-opacity-50" />
           <div className="w-3 h-3 rounded-full bg-white bg-opacity-50" />
         </div>
-        <div className="p-3 flex justify-center gap-3 h-[92.5%]">
-          <div className="mockup-code w-1/2">
+        <div className="p-3 flex md:flex-row flex-col md:justify-center gap-3 h-[92.5%]">
+          <div className="mockup-code w-full md:w-1/2 md:h-full h-1/2">
             <div className="px-8 flex flex-col gap-4 items-start h-[90%]">
               <div className="flex items-center gap-4 w-full">
                 <label className="swap">
@@ -92,16 +110,19 @@ export default function Home() {
                   <p className="text-gray-300">解析 : {transcript}</p>
                 </div>
                 {text &&
-                  `${text}`.split(" ").map((word, index) => (
-                    <div className="flex gap-4 break-all" key={index}>
-                      <span className="text-neutral-focus mr-4">$</span>
-                      <p>{word}</p>
-                    </div>
-                  )).reverse()}
+                  `${text}`
+                    .split(" ")
+                    .map((word, index) => (
+                      <div className="flex gap-4 break-all" key={index}>
+                        <span className="text-neutral-focus mr-4">$</span>
+                        <p>{word}</p>
+                      </div>
+                    ))
+                    .reverse()}
               </div>
             </div>
           </div>
-          <div className="w-1/2 preview border border-base-200 rounded-xl p-3 overflow-y-scroll gap-4 flex flex-col">
+          <div className="w-full h-1/2 md:h-full md:w-1/2 preview border border-base-200 rounded-xl p-3 overflow-y-scroll gap-4 flex flex-col">
             {allText
               .map((text, index) => (
                 <div
@@ -160,7 +181,18 @@ export default function Home() {
           </div>
         </div>
       </div>
-      <button className="btn btn-primary normal-case">Markdownに変換</button>
+      {allText.length > 0 ? (
+        <label className="btn btn-primary normal-case" htmlFor="result">
+          Markdownに変換
+        </label>
+      ) : (
+        <label className="btn btn-primary normal-case" htmlFor="result">
+          Markdownに変換
+        </label>
+        // <button className="btn btn-primary normal-case" disabled>
+        //   Markdownに変換
+        // </button>
+      )}
       <Wave
         className="absolute bottom-0 -z-10"
         fill="#fff"
