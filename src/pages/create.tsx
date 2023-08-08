@@ -8,19 +8,50 @@ import {
 import { BsFillMicFill, BsFillMicMuteFill } from "react-icons/bs";
 import { useState, useEffect } from "react";
 import { AudioVisualizer } from "@/components/common";
+import { OpenAIApi, Configuration } from "openai";
+import { useRouter } from "next/router";
 
 type EditableText = {
   index: number;
   isEditing: boolean;
 };
 
+const PROMPT = `Given the following conversation, please provide a bullet-point summary in Japanese, separating the topics discussed and listing the main points made under each topic without including initial title headers. don't speek style:
+Example format:
+- [title]
+  - point 1
+  - point2
+  `;
+
 export default function Home() {
+  const router = useRouter();
   const [isRecording, setIsRecording] = useState(false);
   const [text, setText] = useState<string>("");
   const [allText, setAllText] = useState<string[]>([]);
   const [transcript, setTranscript] = useState<string>("");
   const [editableText, setEditableText] = useState<EditableText[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [result, setResult] = useState<string>("");
+  const [step, setStep] = useState<number>(0);
+
+  const configuration = new Configuration({
+    apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
+  });
+  const openai = new OpenAIApi(configuration);
+
+  const handleSubmit = async () => {
+    setIsLoading(true);
+    setStep(1);
+    const response = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: PROMPT + "\n" + allText.join("\n") }],
+    });
+
+    setResult(
+      response.data.choices[0].message?.content || "データの取得に失敗しました"
+    );
+    setIsLoading(false);
+  };
 
   const recognition = new webkitSpeechRecognition();
   recognition.lang = "ja-JP";
@@ -59,23 +90,27 @@ export default function Home() {
       <input type="checkbox" id="result" className="modal-toggle" />
       <div className="modal">
         <div className="modal-box max-w-5xl flex flex-col gap-4">
-          <div className="absolute -top-2 right-5 modal-action">
-            <label htmlFor="result" className="btn btn-circle btn-sm">
-              <AiOutlineClose />
-            </label>
-          </div>
           <h2 className="font-bold text-2xl">変換結果</h2>
           <div className="preview border border-base-200 rounded-lg p-2 flex flex-col gap-2">
-            <button
-              className="btn btn-circle btn-sm ml-auto"
-              onClick={() => {
-                navigator.clipboard.writeText(result);
-              }}
+            <div
+              className="ml-auto text-white tooltip tooltip-warning tooltip-left"
+              data-tip="コピーしてドキュメントに貼り付けよう"
             >
-              <AiOutlineCopy />
-            </button>
+              <button
+                className="btn btn-circle btn-warning btn-sm"
+                onClick={() => {
+                  navigator.clipboard.writeText(result);
+                  setStep(2);
+                }}
+              >
+                <AiOutlineCopy />
+              </button>
+            </div>
             <div className="mockup-code">
               <div className="px-8">
+                {isLoading && (
+                  <span className="loading loading-dots loading-lg"></span>
+                )}
                 {result.split("\n").map((line, i) => (
                   <div key={i} className="flex gap-2">
                     {line.split(" ").map((word, j) => (
@@ -88,12 +123,26 @@ export default function Home() {
               </div>
             </div>
           </div>
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={() => {
+              router.push("/");
+            }}
+          >
+            トップページに戻る
+          </button>
         </div>
       </div>
       <ul className="steps">
-        <li className="step step-primary">よもやまを記録</li>
-        <li className="step">markdownに変換</li>
-        <li className="step">ドキュメントに貼り付ける</li>
+        <li className={`step ${step >= 0 && "step-primary"}`}>
+          よもやまを記録
+        </li>
+        <li className={`step ${step >= 1 && "step-primary"}`}>
+          markdownに変換
+        </li>
+        <li className={`step ${step >= 2 && "step-primary"}`}>
+          ドキュメントに貼り付ける
+        </li>
       </ul>
       <div className="w-3/4 h-2/3 border border-white rounded-xl flex flex-col z-10 bg-base-100">
         <div className="border-b border-white p-3 flex gap-3">
@@ -203,16 +252,22 @@ export default function Home() {
         </div>
       </div>
       {allText.length > 0 ? (
-        <label className="btn btn-primary normal-case" htmlFor="result">
-          Markdownに変換
-        </label>
+        <div
+          className="tooltip tooltip-primary tooltip-right"
+          data-tip="トークン削減のため、一度変換するとこのページに戻ってこれません"
+        >
+          <label
+            className="btn btn-primary normal-case"
+            htmlFor="result"
+            onClick={handleSubmit}
+          >
+            Markdownに変換
+          </label>
+        </div>
       ) : (
-        <label className="btn btn-primary normal-case" htmlFor="result">
+        <button className="btn btn-primary normal-case" disabled>
           Markdownに変換
-        </label>
-        // <button className="btn btn-primary normal-case" disabled>
-        //   Markdownに変換
-        // </button>
+        </button>
       )}
       <Wave
         className="absolute bottom-0 -z-10"
