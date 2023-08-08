@@ -1,10 +1,5 @@
 import Wave from "react-wavify";
-import {
-  AiFillEdit,
-  AiFillDelete,
-  AiOutlineClose,
-  AiOutlineCopy,
-} from "react-icons/ai";
+import { AiFillEdit, AiFillDelete, AiOutlineCopy } from "react-icons/ai";
 import { BsFillMicFill, BsFillMicMuteFill } from "react-icons/bs";
 import { useState, useEffect } from "react";
 import { AudioVisualizer } from "@/components/common";
@@ -16,12 +11,12 @@ type EditableText = {
   isEditing: boolean;
 };
 
-const PROMPT = `Given the following conversation, please provide a bullet-point summary in Japanese, separating the topics discussed and listing the main points made under each topic without including initial title headers. don't speek style:
-Example format:
-- [title]
+const PROMPT = `Please provide a bulleted summary of the following conversation in Japanese, separating and summarizing the topics discussed and listing the main points of each topic.
+Example format :
+- title
   - point 1
   - point2
-  `;
+`;
 
 export default function Home() {
   const router = useRouter();
@@ -53,12 +48,22 @@ export default function Home() {
     setIsLoading(false);
   };
 
-  const recognition = new webkitSpeechRecognition();
-  recognition.lang = "ja-JP";
-  recognition.continuous = true;
-  recognition.interimResults = true;
+  const [recognition, setRecognition] = useState<SpeechRecognition | null>(
+    null
+  );
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const recognition = new webkitSpeechRecognition();
+      recognition.lang = "ja-JP";
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      setRecognition(recognition);
+    }
+  }, []);
 
   useEffect(() => {
+    if (!recognition) return;
+
     if (isRecording) {
       recognition.start();
     } else {
@@ -68,22 +73,25 @@ export default function Home() {
     }
   }, [isRecording]);
 
-  recognition.onresult = (event) => {
-    const results = event.results;
-    for (let i = event.resultIndex; i < results.length; i++) {
-      if (results[i].isFinal) {
-        setText((prevText) =>
-          (
-            (prevText ? prevText + " " : prevText) +
-            results[i][0].transcript.replaceAll(" ", "、").replace("、", "")
-          ).replaceAll("  ", " ")
-        );
-        setTranscript("");
-      } else {
-        setTranscript(results[i][0].transcript);
+  useEffect(() => {
+    if (!recognition) return;
+    recognition.onresult = (event) => {
+      const results = event.results;
+      for (let i = event.resultIndex; i < results.length; i++) {
+        if (results[i].isFinal) {
+          setText((prevText) =>
+            (
+              (prevText ? prevText + " " : prevText) +
+              results[i][0].transcript.replaceAll(" ", "、").replace("、", "")
+            ).replaceAll("  ", " ")
+          );
+          setTranscript("");
+        } else {
+          setTranscript(results[i][0].transcript);
+        }
       }
-    }
-  };
+    };
+  }, [recognition]);
 
   return (
     <main className="w-screen h-screen flex items-center justify-center font-sawarabi flex-col gap-8">
